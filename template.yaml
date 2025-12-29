@@ -20,8 +20,12 @@ Globals:
         ALLOWED_ORIGINS: !Ref GitHubPagesUrl
   Api:
     # Throttle to prevent cost explosion
-    ThrottlingBurstLimit: 10    # Max concurrent requests
-    ThrottlingRateLimit: 5       # Requests per second
+    Auth:
+      UsagePlan:
+        CreateUsagePlan: PER_API
+        Throttle:
+          BurstLimit: 10
+          RateLimit: 5
 
 Resources:
   # DynamoDB Table for games
@@ -50,12 +54,12 @@ Resources:
             TableName: !Ref GamesTable
       Events:
         ProxyApi:
-          Type: HttpApi
+          Type: Api
           Properties:
             Path: /{proxy+}
             Method: ANY
         RootApi:
-          Type: HttpApi
+          Type: Api
           Properties:
             Path: /
             Method: ANY
@@ -63,4 +67,4 @@ Resources:
 Outputs:
   ApiUrl:
     Description: API Gateway URL
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

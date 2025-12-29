@@ -310,7 +310,7 @@ sam deploy
 - API Gateway: 1M requests free/month
 
 **Cost protection (built-in):**
-- API throttling: 5 requests/sec, burst 10
+- API throttling: 5 requests/sec, burst 10 (via Usage Plan)
 - Lambda concurrency: Max 5 concurrent executions
 - Recommended: Set up AWS Budget alert ($1/month)
 
