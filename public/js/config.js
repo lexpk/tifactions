@@ -1,10 +1,10 @@
 // API Configuration
-// This file is updated during deployment
-// For local development, API_BASE is empty (uses same origin)
-// For GitHub Pages, API_BASE points to Lambda
+// This file is auto-populated by CI/CD during deployment
+// For local development, leave empty (uses same origin)
 
 const CONFIG = {
-  API_BASE: '' // Set to Lambda URL for production, e.g., 'https://abc123.execute-api.us-east-1.amazonaws.com'
+  API_BASE: '',
+  API_KEY: ''
 };
 
 window.CONFIG = CONFIG;

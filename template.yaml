@@ -35,6 +35,7 @@ Globals:
         Throttle:
           BurstLimit: 10
           RateLimit: 5
+        UsagePlanName: tifactions-usage-plan
 
 Resources:
   # DynamoDB Table for games
@@ -78,3 +79,6 @@ Outputs:
   ApiUrl:
     Description: API Gateway URL
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  ApiKeyId:
+    Description: API Key ID (use 'aws apigateway get-api-key --api-key <id> --include-value' to get the value)
+    Value: !Ref ServerlessRestApiApiKey

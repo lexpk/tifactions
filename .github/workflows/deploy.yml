@@ -1,19 +1,32 @@
-name: Deploy to AWS
+name: Deploy to AWS and GitHub Pages
 
 on:
   push:
     branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "deploy"
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-aws:
     runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.get-outputs.outputs.api_url }}
+      api_key: ${{ steps.get-outputs.outputs.api_key }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Setup AWS SAM
         uses: aws-actions/setup-sam@v2
@@ -23,10 +36,53 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: eu-central-1
 
-      - name: Build
-        run: sam build
+      - name: Build and Deploy
+        run: sam build && sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
 
-      - name: Deploy
-        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+      - name: Get stack outputs
+        id: get-outputs
+        run: |
+          API_URL=$(aws cloudformation describe-stacks --stack-name tifactions \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' --output text)
+
+          API_KEY_ID=$(aws cloudformation describe-stacks --stack-name tifactions \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiKeyId`].OutputValue' --output text)
+
+          API_KEY=$(aws apigateway get-api-key --api-key "$API_KEY_ID" --include-value \
+            --query 'value' --output text)
+
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
+          echo "api_key=$API_KEY" >> $GITHUB_OUTPUT
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: deploy-aws
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write API config
+        run: |
+          cat > public/js/config.js << EOF
+          const CONFIG = {
+            API_BASE: '${{ needs.deploy-aws.outputs.api_url }}',
+            API_KEY: '${{ needs.deploy-aws.outputs.api_key }}'
+          };
+          window.CONFIG = CONFIG;
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

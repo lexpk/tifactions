@@ -25,10 +25,11 @@ Then navigate to `http://localhost:3000`
 ### Deploy to AWS + GitHub Pages
 
 1. Install AWS SAM CLI and configure AWS credentials
-2. Deploy Lambda: `sam build && sam deploy --guided`
+2. Deploy Lambda once: `sam build && sam deploy --guided`
 3. Push to GitHub, enable Pages (Settings → Pages → GitHub Actions)
-4. Add secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `API_URL`
-5. Share your `yourusername.github.io/tifactions` URL!
+4. Add secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+5. Push to `main` → auto-deploys everything!
+6. Share your `yourusername.github.io/tifactions` URL!
 
 ## How to Use
 
@@ -89,12 +90,13 @@ commitment = SHA-256(playerName || selectedFaction || randomSalt)
 All data + salts revealed, clients verify: `hash(data + salt) == commitment`
 
 ### Stack
-- **Backend:** Node.js + Express on AWS Lambda
+- **Backend:** Node.js 20 + Express on AWS Lambda
 - **Database:** DynamoDB (persistent)
-- **Auth:** bcrypt password hashing
+- **Auth:** bcrypt password hashing + JWT tokens
 - **Crypto:** SHA-256 commitments
+- **Rate Limiting:** API Gateway Usage Plan (5 req/sec)
 - **Frontend:** Vanilla HTML/CSS/JS on GitHub Pages
-- **CI/CD:** GitHub Actions auto-deploy
+- **CI/CD:** GitHub Actions (single workflow deploys AWS + Pages)
 
 ## Project Structure
 
@@ -116,7 +118,8 @@ tifactions/
 │   ├── docs.html          # Documentation
 │   ├── css/style.css      # Styles
 │   └── js/*.js            # Frontend logic
-└── .github/workflows/     # CI/CD auto-deploy
+└── .github/workflows/
+    └── deploy.yml         # Combined AWS + Pages deploy
 ```
 
 ## API Endpoints
@@ -130,8 +133,4 @@ tifactions/
 
 ## License
 
-MIT
-
-## Contributing
-
-Pull requests welcome! This project was built for casual gaming - improvements for security, UX, or features are appreciated.
+[MIT](LICENSE)

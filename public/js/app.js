@@ -1,7 +1,17 @@
 // Shared utilities and API client
 
-// Get API base URL from config (empty for local, Lambda URL for production)
+// Get API config (empty for local, set for production)
 const API_BASE = (window.CONFIG && window.CONFIG.API_BASE) || '';
+const API_KEY = (window.CONFIG && window.CONFIG.API_KEY) || '';
+
+// Helper to build headers with optional API key
+function buildHeaders(extra = {}) {
+  const headers = { ...extra };
+  if (API_KEY) {
+    headers['x-api-key'] = API_KEY;
+  }
+  return headers;
+}
 
 // Helper to handle API responses
 async function handleResponse(res) {
@@ -23,7 +33,7 @@ const API = {
   async createGame(playerNames, factionsPerPlayer, customGameId = null) {
     const res = await fetch(`${API_BASE}/api/game/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify({ playerNames, factionsPerPlayer, customGameId })
     });
@@ -31,14 +41,17 @@ const API = {
   },
 
   async getStatus(gameId) {
-    const res = await fetch(`${API_BASE}/api/game/${gameId}/status`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/status`, {
+      headers: buildHeaders(),
+      credentials: 'include'
+    });
     return await handleResponse(res);
   },
 
   async authenticate(gameId, playerName, password) {
     const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify({ password })
     });
@@ -46,25 +59,25 @@ const API = {
   },
 
   async getOptions(gameId, playerName, token) {
-    const headers = {};
+    const extra = {};
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      extra['Authorization'] = `Bearer ${token}`;
     }
     const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/options`, {
-      headers,
+      headers: buildHeaders(extra),
       credentials: 'include'
     });
     return await handleResponse(res);
   },
 
   async selectFaction(gameId, playerName, factionId, token) {
-    const headers = { 'Content-Type': 'application/json' };
+    const extra = { 'Content-Type': 'application/json' };
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      extra['Authorization'] = `Bearer ${token}`;
     }
     const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/select`, {
       method: 'POST',
-      headers,
+      headers: buildHeaders(extra),
       credentials: 'include',
       body: JSON.stringify({ factionId })
     });
@@ -72,7 +85,10 @@ const API = {
   },
 
   async getReveal(gameId) {
-    const res = await fetch(`${API_BASE}/api/game/${gameId}/reveal`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/reveal`, {
+      headers: buildHeaders(),
+      credentials: 'include'
+    });
     return await handleResponse(res);
   }
 };

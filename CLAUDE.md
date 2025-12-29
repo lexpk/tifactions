@@ -43,8 +43,7 @@ tifactions/
 │       ├── status.js           # Status page logic
 │       └── verification.js     # Client-side hash verification
 ├── .github/workflows/
-│   ├── deploy.yml              # AWS Lambda auto-deploy
-│   └── pages.yml               # GitHub Pages auto-deploy
+│   └── deploy.yml              # Combined AWS + GitHub Pages auto-deploy
 └── README.md                    # Quick start guide
 ```
 
@@ -131,9 +130,7 @@ A commitment scheme allows players to "commit" to a choice without revealing it.
 **Pages:**
 
 1. **Landing Page** (`/` or `/index.html`)
-   - Project overview and introduction
-   - Quick start guide
-   - Links to create game or join existing game
+   - Join game form (enter Game ID and player name)
    - Link to documentation
 
 2. **Documentation Page** (`/docs.html`)
@@ -166,13 +163,14 @@ A commitment scheme allows players to "commit" to a choice without revealing it.
 
 ### Technology Stack
 
-- **Backend**: Node.js 18+ with Express (runs on AWS Lambda in production)
+- **Backend**: Node.js 20 with Express (runs on AWS Lambda in production)
 - **Database**: DynamoDB (production) / lowdb JSON file (local development)
 - **Crypto**: Node.js built-in `crypto` module (SHA-256 for commitments)
 - **Password Hashing**: bcryptjs for secure password storage
 - **Frontend**: Vanilla HTML/CSS/JavaScript hosted on GitHub Pages
-- **Authentication**: Password-based (set on first visit, bcrypt hashed)
-- **CI/CD**: GitHub Actions for auto-deployment
+- **Authentication**: JWT tokens (stateless, works with Lambda)
+- **Rate Limiting**: API Gateway Usage Plan with API key (5 req/sec)
+- **CI/CD**: GitHub Actions for auto-deployment (single workflow)
 
 ### Database Layer
 
@@ -191,83 +189,38 @@ const db = isLambda
 | `npm start` (local) | lowdb | `data/db.json` file |
 | AWS Lambda | DynamoDB | AWS managed |
 
-Both implement the same interface: `getGame`, `setGame`, `hasGame`, `getGamesByIP`, `deleteGame`
+Both implement the same interface: `getGame`, `setGame`, `hasGame`
 
-### Authentication Flow
+### Authentication Flow (JWT-based)
 
 **First Visit:**
 1. Player visits `/player.html?game=123&player=Alice`
 2. Server checks: has Alice set a password yet?
 3. No → Show "Set Password" form
-4. Player enters password → bcrypt hash stored server-side
-5. Session cookie/token issued → player sees their factions
+4. Player enters password → bcrypt hash stored in DynamoDB
+5. Server returns JWT token → stored in sessionStorage → player sees their factions
 
 **Subsequent Visits:**
 1. Player visits same URL
-2. Server checks: Alice has already set password
-3. Show "Enter Password" form
+2. If valid token in sessionStorage → auto-load factions
+3. If no token → Show "Enter Password" form
 4. Player enters password → bcrypt compare with stored hash
-5. If valid → session cookie/token issued → player sees their factions
+5. If valid → JWT token returned and stored → player sees their factions
 6. If invalid → "Incorrect password" error
+
+**JWT Token:**
+- Contains: `{ gameId, playerName, exp }`
+- Signed with server secret (consistent across Lambda invocations)
+- Sent in `Authorization: Bearer <token>` header
+- Expires after 24 hours
 
 **Security Properties:**
 - Player links contain no secrets (just game ID + player name)
 - Passwords never stored in plaintext
+- Stateless auth works with Lambda (no session storage needed)
 - Each player controls their own authentication
 - Can't view another player's options without their password
-- Session cookies/localStorage used after login (passwords not re-entered constantly)
-
-## Implementation Plan
-
-### Step 1: Core Backend
-- Set up Express server with bcrypt dependency
-- Implement game state management
-- Create cryptographic commitment functions (lib/crypto.js)
-- Implement password authentication system (set/verify)
-- Build API endpoints with authentication middleware
-
-### Step 2: Faction Data
-- Create comprehensive list of Twilight Imperium factions (factions.json)
-- Include faction metadata (names, colors, abilities summary)
-
-### Step 3: Frontend - Foundation
-- Landing page (index.html)
-- Documentation page (docs.html) with:
-  - How the commitment scheme works
-  - Step-by-step usage guide
-  - Security explanation
-  - Verification instructions
-- Shared CSS styling
-- Shared JavaScript utilities
-
-### Step 4: Frontend - Admin Interface
-- Game creation form (admin.html)
-- Player name input
-- Faction count selector (3 or 4)
-- Generate shareable player links with tokens
-
-### Step 5: Frontend - Player Interface
-- Display assigned factions (player.html)
-- Faction selection UI
-- Waiting state display
-- Results and verification view
-
-### Step 6: Frontend - Status Page
-- Public commitments display (status.html)
-- Player selection status
-- Reveal interface
-
-### Step 7: Verification System
-- Client-side hash verification (verification.js)
-- Visual confirmation of integrity
-- Detailed audit log
-- Independent verification tools
-
-### Step 8: Polish
-- Responsive design for mobile
-- Error handling and validation
-- Loading states and animations
-- README.md for GitHub
+- Tokens stored in sessionStorage (cleared on browser close)
 
 ## Running the Application
 
@@ -278,84 +231,52 @@ npm install
 npm start
 ```
 
-Then navigate to `http://localhost:3000` to access the application.
+Navigate to `http://localhost:3000`. Uses local JSON file database.
 
-### Deploying to AWS Lambda + DynamoDB
+### Production Deployment
 
-**Prerequisites:**
-- AWS CLI configured (`aws configure`)
-- AWS SAM CLI installed (`brew install aws-sam-cli` or [install guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html))
-
-**Deploy:**
+Just push to `main`:
 
 ```bash
-# Build the application
-sam build
-
-# Deploy (first time - will prompt for settings)
-sam deploy --guided
-
-# Subsequent deploys
-sam deploy
+git push
 ```
 
-**What gets created:**
-- Lambda function (Node.js 18)
-- API Gateway (HTTP API)
+CI/CD automatically:
+1. Deploys Lambda + DynamoDB via SAM
+2. Extracts API URL and Key from CloudFormation
+3. Deploys GitHub Pages with correct config
+
+**Live URL:** `https://lexpk.github.io/tifactions`
+
+### First-Time Setup
+
+For reference, initial setup required:
+
+1. `sam build && sam deploy --guided` (creates AWS resources)
+2. Enable GitHub Pages (Settings → Pages → GitHub Actions)
+3. Add GitHub Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+
+### Infrastructure
+
+**AWS Resources:**
+- Lambda function (Node.js 20)
+- API Gateway (REST API with Usage Plan)
 - DynamoDB table (pay-per-request)
-
-**Cost:** Near-free for low usage:
-- Lambda: 1M free requests/month
-- DynamoDB: 25GB storage free, pay-per-request
-- API Gateway: 1M requests free/month
-
-**Cost protection (built-in):**
-- API throttling: 5 requests/sec, burst 10 (via Usage Plan)
-- Recommended: Set up AWS Budget alert ($1/month)
-
-**Delete everything:**
-```bash
-sam delete
-```
-
-### GitHub Pages + Lambda (Recommended)
-
-For a nicer URL like `yourusername.github.io/tifactions`:
+- API Key for rate limiting
 
 **Architecture:**
 ```
 GitHub Pages (Static)  ────▶  AWS Lambda (API)
-yourusername.github.io        API Gateway + DynamoDB
+lexpk.github.io/tifactions    API Gateway + DynamoDB
+     │                              │
+     └── config.js (auto-populated by CI/CD)
 ```
 
-**Setup steps:**
+**Cost:** Near-free for low usage (all within free tier)
 
-1. Deploy Lambda first and note the API URL:
-```bash
-sam build && sam deploy --guided
-```
+**Cost protection:** API throttling at 5 req/sec via Usage Plan
 
-2. Push code to GitHub
-
-3. Enable GitHub Pages:
-   - Repo → Settings → Pages → Source: "GitHub Actions"
-
-4. Add GitHub Secrets (Repo → Settings → Secrets → Actions):
-
-| Secret | Value |
-|--------|-------|
-| `AWS_ACCESS_KEY_ID` | Your AWS access key |
-| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
-| `API_URL` | Lambda URL (e.g., `https://abc123.execute-api.us-east-1.amazonaws.com`) |
-
-5. (Optional) Restrict CORS to your GitHub Pages URL:
-```bash
-sam deploy --parameter-overrides GitHubPagesUrl=https://yourusername.github.io
-```
-
-**CI/CD:**
-- Push to `main` → Auto-deploys to both GitHub Pages and Lambda
-- Workflows: `.github/workflows/pages.yml` and `.github/workflows/deploy.yml`
+**Delete everything:** `sam delete`
 
 ## Security Considerations
 
@@ -377,7 +298,6 @@ sam deploy --parameter-overrides GitHubPagesUrl=https://yourusername.github.io
 **Password Authentication:**
 - Weak/shared passwords can be compromised
 - No password recovery mechanism (by design - can't verify identity)
-- In-memory storage means passwords lost on server restart
 - Server operator could log passwords before hashing (requires code modification)
 
 **Commitment Scheme:**
@@ -387,34 +307,12 @@ sam deploy --parameter-overrides GitHubPagesUrl=https://yourusername.github.io
 - Small faction pool (~25 factions) makes brute-force easier than random data
 
 **General:**
-- No persistence means games lost on server restart
-- No HTTPS enforcement (should use HTTPS in production)
-- Session management is basic (fine for casual gaming, not production-grade)
+- Games are persisted in DynamoDB (survive restarts)
+- HTTPS enforced via API Gateway and GitHub Pages
+- API Key visible in frontend (by design - only for rate limiting, not security)
 
 ### What If Someone Gets My Link?
 
 If someone gets your link (`/player.html?game=123&player=Alice`):
 - **Before you set password**: They can set the password (and lock you out!)
 - **After you set password**: They need your password to see your factions
-
-**Recommendation**: Visit your link and set password ASAP after game creation.
-
-### For Paranoid Players
-
-To further increase trust:
-- Review the source code before the game starts
-- Run on a trusted player's machine (not a stranger's server)
-- Each player verifies the code hasn't been modified (git commit hash)
-- Use browser's network inspector to verify server responses
-- Independently verify all hashes at reveal time using provided verification tools
-- Use strong, unique passwords
-- Set your password immediately after receiving the link
-
-## Future Enhancements
-
-- Persistent storage (database)
-- Support for multiple concurrent games
-- Ban/veto system for factions
-- Draft history and statistics
-- Mobile-responsive design
-- TTS (Tabletop Simulator) integration
