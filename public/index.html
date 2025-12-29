@@ -29,34 +29,53 @@
     <div class="card text-center">
       <a href="./docs.html">Read Documentation</a>
     </div>
+  </div>
 
-    <script>
-      function joinGame() {
-        const gameId = document.getElementById('gameId').value.trim();
-        const playerName = document.getElementById('playerName').value.trim();
+  <script src="./js/config.js"></script>
+  <script src="./js/app.js"></script>
+  <script>
+    async function joinGame() {
+      const gameId = document.getElementById('gameId').value.trim();
+      const playerName = document.getElementById('playerName').value.trim();
 
-        if (!gameId) {
-          alert('Please enter a Game ID');
+      if (!gameId) {
+        showError('Please enter a Game ID');
+        return;
+      }
+
+      if (!playerName) {
+        showError('Please enter your name');
+        return;
+      }
+
+      try {
+        const status = await API.getStatus(gameId);
+
+        if (status.error) {
+          showError(status.error);
           return;
         }
 
-        if (!playerName) {
-          alert('Please enter your name');
+        const player = status.players.find(p => p.name === playerName);
+        if (!player) {
+          showError(`Player "${playerName}" not found in this game`);
           return;
         }
 
         window.location.href = `./player.html?game=${encodeURIComponent(gameId)}&player=${encodeURIComponent(playerName)}`;
+      } catch (error) {
+        showError('Failed to join game: ' + error.message);
       }
+    }
 
-      // Allow Enter key to submit
-      document.addEventListener('DOMContentLoaded', () => {
-        ['gameId', 'playerName'].forEach(id => {
-          document.getElementById(id).addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') joinGame();
-          });
+    // Allow Enter key to submit
+    document.addEventListener('DOMContentLoaded', () => {
+      ['gameId', 'playerName'].forEach(id => {
+        document.getElementById(id).addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') joinGame();
         });
       });
-    </script>
-  </div>
+    });
+  </script>
 </body>
 </html>
