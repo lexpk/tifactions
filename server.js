@@ -10,7 +10,7 @@ const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 const db = isLambda
   ? await import('./lib/dynamodb.js')
   : await import('./lib/db.js');
-const { getGame, setGame, hasGame, getGamesByIP, deleteGame } = db;
+const { getGame, setGame, hasGame } = db;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,7 +25,7 @@ app.use((req, res, next) => {
   if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
   }
   if (req.method === 'OPTIONS') {
@@ -114,18 +114,6 @@ function assignFactions(playerNames, factionsPerPlayer) {
 app.post('/api/game/create', async (req, res) => {
   const { playerNames, factionsPerPlayer, customGameId } = req.body;
 
-  // Get client IP
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.socket.remoteAddress;
-
-  // Check IP game limit (max 2 concurrent games per IP)
-  const existingGames = await getGamesByIP(clientIP);
-  if (existingGames.length >= 2) {
-    return res.status(429).json({
-      error: 'Maximum 2 games per user. Please select a game to delete.',
-      games: existingGames
-    });
-  }
-
   // Validation
   if (!Array.isArray(playerNames) || playerNames.length < 2) {
     return res.status(400).json({ error: 'Need at least 2 players' });
@@ -172,8 +160,7 @@ app.post('/api/game/create', async (req, res) => {
     factionsPerPlayer,
     allSelected: false,
     revealed: false,
-    createdAt: new Date().toISOString(),
-    creatorIP: clientIP
+    createdAt: new Date().toISOString()
   });
 
   res.json({
@@ -183,30 +170,6 @@ app.post('/api/game/create', async (req, res) => {
       url: `/player.html?game=${gameId}&player=${encodeURIComponent(name)}`
     }))
   });
-});
-
-/**
- * DELETE /api/game/:gameId
- * Delete a game (only creator can delete)
- */
-app.delete('/api/game/:gameId', async (req, res) => {
-  const { gameId } = req.params;
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.socket.remoteAddress;
-
-  const game = await getGame(gameId);
-
-  if (!game) {
-    return res.status(404).json({ error: 'Game not found' });
-  }
-
-  // Check if requester is the creator
-  if (game.creatorIP !== clientIP) {
-    return res.status(403).json({ error: 'Only the game creator can delete this game' });
-  }
-
-  await deleteGame(gameId);
-
-  res.json({ success: true, message: 'Game deleted successfully' });
 });
 
 /**
