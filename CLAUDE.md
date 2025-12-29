@@ -250,11 +250,18 @@ CI/CD automatically:
 
 ### First-Time Setup
 
-For reference, initial setup required:
+1. **Create IAM User** in AWS Console:
+   - Go to IAM → Users → Create user
+   - Attach policies: `AWSLambda_FullAccess`, `AmazonDynamoDBFullAccess`, `AmazonAPIGatewayAdministrator`, `AWSCloudFormationFullAccess`, `IAMFullAccess`, `AmazonS3FullAccess`
+   - Create access key (CLI use case)
 
-1. `sam build && sam deploy --guided` (creates AWS resources)
-2. Enable GitHub Pages (Settings → Pages → GitHub Actions)
-3. Add GitHub Secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+2. **Add GitHub Secrets** (Settings → Secrets → Actions):
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+
+3. **Enable GitHub Pages**: Settings → Pages → Source: "GitHub Actions"
+
+4. **Push to `main`** — CI/CD creates all AWS resources automatically
 
 ### Infrastructure
 
@@ -277,8 +284,6 @@ lexpk.github.io/tifactions    API Gateway + DynamoDB
 **Cost protection:** API throttling at 5 req/sec via Usage Plan
 
 **Data retention:** Games auto-delete after 30 days (DynamoDB TTL)
-
-**Delete everything:** `sam delete`
 
 ## Security Considerations
 

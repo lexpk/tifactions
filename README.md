@@ -24,11 +24,11 @@ Then navigate to `http://localhost:3000`
 
 ### Deploy to AWS + GitHub Pages
 
-1. Install AWS SAM CLI and configure AWS credentials
-2. Deploy Lambda once: `sam build && sam deploy --guided`
-3. Push to GitHub, enable Pages (Settings → Pages → GitHub Actions)
-4. Add secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-5. Push to `main` → auto-deploys everything!
+1. Create AWS IAM user with Lambda, DynamoDB, API Gateway, CloudFormation, S3, IAM permissions
+2. Fork/clone repo and push to your GitHub
+3. Add GitHub secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+4. Enable GitHub Pages: Settings → Pages → Source: "GitHub Actions"
+5. Push to `main` → CI/CD deploys everything automatically!
 6. Share your `yourusername.github.io/tifactions` URL!
 
 ## How to Use
