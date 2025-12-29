@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TI Faction Selector</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>TI Faction Selector</h1>
+
+    <div class="card">
+      <h3>Join a Game</h3>
+
+      <div class="form-group">
+        <label for="gameId">Game ID:</label>
+        <input type="text" id="gameId" placeholder="e.g., ae9d8da4">
+      </div>
+
+      <div class="form-group">
+        <label for="playerName">Your Name:</label>
+        <input type="text" id="playerName" placeholder="e.g., Alice">
+      </div>
+
+      <button onclick="joinGame()">Join Game</button>
+    </div>
+
+    <div class="card text-center">
+      <a href="/docs.html">Read Documentation</a>
+    </div>
+
+    <script>
+      function joinGame() {
+        const gameId = document.getElementById('gameId').value.trim();
+        const playerName = document.getElementById('playerName').value.trim();
+
+        if (!gameId) {
+          alert('Please enter a Game ID');
+          return;
+        }
+
+        if (!playerName) {
+          alert('Please enter your name');
+          return;
+        }
+
+        window.location.href = `/player.html?game=${encodeURIComponent(gameId)}&player=${encodeURIComponent(playerName)}`;
+      }
+
+      // Allow Enter key to submit
+      document.addEventListener('DOMContentLoaded', () => {
+        ['gameId', 'playerName'].forEach(id => {
+          document.getElementById(id).addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinGame();
+          });
+        });
+      });
+    </script>
+  </div>
+</body>
+</html>

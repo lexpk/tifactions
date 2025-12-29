@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation - TI Faction Selector</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Documentation</h1>
+
+    <div class="card">
+      <h2>How to Use</h2>
+
+      <h3>1. Create a Game (Admin)</h3>
+      <ul>
+        <li>Go to the <a href="/admin.html">Create Game</a> page</li>
+        <li>Choose how many factions each player gets (3 or 4)</li>
+        <li>Enter player names (one per line)</li>
+        <li>Click "Create Game"</li>
+        <li>Share the generated links with each player</li>
+      </ul>
+
+      <h3>2. Set Your Password (Players)</h3>
+      <ul>
+        <li>Click the link you received from the admin</li>
+        <li><strong>Important:</strong> Set your password immediately!</li>
+        <li>If someone gets your link before you set a password, they can lock you out</li>
+        <li>Choose a password (minimum 4 characters)</li>
+      </ul>
+
+      <h3>3. View Your Factions</h3>
+      <ul>
+        <li>After setting/entering your password, you'll see your random faction options</li>
+        <li>You'll have 3-4 factions to choose from</li>
+        <li>Take your time to decide - you can't see what others got</li>
+      </ul>
+
+      <h3>4. Make Your Selection</h3>
+      <ul>
+        <li>Click on the faction you want to play</li>
+        <li>Click "Confirm Selection"</li>
+        <li><strong>This cannot be changed!</strong></li>
+        <li>Wait for other players to make their selections</li>
+      </ul>
+
+      <h3>5. View Results</h3>
+      <ul>
+        <li>Once everyone has selected, all choices are revealed</li>
+        <li>You can see everyone's options and what they chose</li>
+        <li>All cryptographic commitments are automatically verified</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>How It Works (Technical)</h2>
+
+      <h3>Cryptographic Commitments</h3>
+      <p>
+        The system uses SHA-256 hash-based commitments to ensure fairness and verifiability.
+      </p>
+
+      <h4>Phase 1: Assignment</h4>
+      <p>When factions are assigned:</p>
+      <ul>
+        <li>Server randomly assigns factions to each player</li>
+        <li>For each player, creates: <code>hash(playerName + factions + randomSalt)</code></li>
+        <li>Stores the hash publicly (anyone can see it)</li>
+        <li>Keeps the salt and factions private</li>
+      </ul>
+
+      <h4>Phase 2: Selection</h4>
+      <p>When you select a faction:</p>
+      <ul>
+        <li>Server creates: <code>hash(playerName + selectedFaction + randomSalt)</code></li>
+        <li>Stores this hash publicly</li>
+        <li>Keeps your selection and salt private</li>
+      </ul>
+
+      <h4>Phase 3: Reveal</h4>
+      <p>After everyone selects:</p>
+      <ul>
+        <li>Server reveals all assignments, selections, and salts</li>
+        <li>Browser verifies: <code>hash(revealed data + revealed salt) == stored hash</code></li>
+        <li>If hashes match, no one changed their selection!</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Security Properties</h2>
+
+      <h3>What This Guarantees</h3>
+      <ul>
+        <li><strong>Hiding:</strong> Commitments reveal nothing about the data (cryptographic property)</li>
+        <li><strong>Binding:</strong> Can't change selection after committing (hash collision resistance)</li>
+        <li><strong>Verifiable:</strong> Everyone can independently verify no tampering occurred</li>
+        <li><strong>Fair:</strong> Assignments are random; no one gets preferential treatment</li>
+      </ul>
+
+      <h3>What This Protects Against</h3>
+      <ul>
+        <li>Players seeing others' options before selecting</li>
+        <li>Players changing their choice after seeing others' picks</li>
+        <li>Server operator deducing choices from commitments</li>
+        <li>Anyone tampering with selections after they're made</li>
+      </ul>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li>Server operator could modify code to log data before hashing</li>
+        <li>Weak passwords can be guessed (use strong passwords!)</li>
+        <li>If someone gets your link before you set a password, they can lock you out</li>
+        <li>Small faction pool (~24 factions) makes brute-force easier than random data</li>
+      </ul>
+    </div>
+
+
+    <div class="card">
+      <h2>FAQ</h2>
+
+      <h4>Q: Can the server operator see my options?</h4>
+      <p>
+        A: Yes, the server has access to all data in plaintext. However, they cannot determine your
+        <strong>selection</strong> from the commitment hash until reveal time. For maximum trust,
+        run the server on a trusted player's machine.
+      </p>
+
+      <h4>Q: What if I forget my password?</h4>
+      <p>
+        A: There's no password recovery. You'll need to ask the admin to create a new game.
+        This is by design - there's no way to verify your identity.
+      </p>
+
+      <h4>Q: Can I change my selection?</h4>
+      <p>
+        A: No. Once you confirm, your selection is cryptographically committed and cannot be changed.
+      </p>
+
+      <h4>Q: What happens if the server crashes?</h4>
+      <p>
+        A: All game data is lost (in-memory storage). You'll need to create a new game.
+      </p>
+
+      <h4>Q: How do I verify the commitments?</h4>
+      <p>
+        A: The browser automatically verifies all commitments at reveal. Check the browser console
+        (F12 → Console) to see verification messages.
+      </p>
+    </div>
+
+    <div class="card text-center">
+      <p>
+        <a href="/"><button>Back to Home</button></a>
+        <a href="/admin.html"><button class="secondary">Create a Game</button></a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player - TI Faction Selector</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Faction Selection</h1>
+
+    <!-- Password Set/Login -->
+    <div id="authSection" class="card">
+      <h3 id="authTitle">Loading...</h3>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter password" autocomplete="off">
+        <small id="passwordHelp" style="color: var(--text-dim);"></small>
+      </div>
+      <button onclick="authenticate()">Continue</button>
+    </div>
+
+    <!-- Faction Selection -->
+    <div id="selectionSection" class="hidden">
+      <div class="card">
+        <h3>Your Faction Options</h3>
+        <p id="selectionInstructions">Select one faction from your options below:</p>
+
+        <div id="factionsGrid" class="faction-grid"></div>
+
+        <div id="selectionControls" class="mt-3">
+          <button id="confirmButton" onclick="confirmSelection()" disabled>Confirm Selection</button>
+        </div>
+      </div>
+
+      <div id="commitmentCard" class="card">
+        <h3>Your Assignment Commitment</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          This hash proves your factions were assigned before you saw them:
+        </p>
+        <div id="assignmentCommitment" class="commitment"></div>
+      </div>
+    </div>
+
+    <!-- Waiting for Others -->
+    <div id="waitingSection" class="card hidden">
+      <h3>Waiting for Others...</h3>
+      <p>You've selected your faction. Waiting for other players to make their selections.</p>
+      <div id="waitingStatus"></div>
+      <button onclick="checkStatus()" class="secondary mt-2">Refresh Status</button>
+    </div>
+
+    <!-- Reveal -->
+    <div id="revealSection" class="hidden">
+      <div class="card">
+        <h3>🎉 All Selections Complete!</h3>
+        <p>Everyone has chosen their faction. Here are the results:</p>
+      </div>
+
+      <div id="revealContent"></div>
+
+      <div class="card">
+        <h3>Verification</h3>
+        <p>All commitments have been verified ✓</p>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          The cryptographic hashes confirm that no one changed their selection after seeing others' choices.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/verification.js"></script>
+  <script src="/js/player.js"></script>
+</body>
+</html>

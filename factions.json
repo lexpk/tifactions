@@ -1,0 +1,122 @@
+[
+  {
+    "id": "arborec",
+    "name": "The Arborec",
+    "expansion": "base"
+  },
+  {
+    "id": "letnev",
+    "name": "The Barony of Letnev",
+    "expansion": "base"
+  },
+  {
+    "id": "saar",
+    "name": "The Clan of Saar",
+    "expansion": "base"
+  },
+  {
+    "id": "muaat",
+    "name": "The Embers of Muaat",
+    "expansion": "base"
+  },
+  {
+    "id": "hacan",
+    "name": "The Emirates of Hacan",
+    "expansion": "base"
+  },
+  {
+    "id": "sol",
+    "name": "The Federation of Sol",
+    "expansion": "base"
+  },
+  {
+    "id": "creuss",
+    "name": "The Ghosts of Creuss",
+    "expansion": "base"
+  },
+  {
+    "id": "l1z1x",
+    "name": "The L1Z1X Mindnet",
+    "expansion": "base"
+  },
+  {
+    "id": "mentak",
+    "name": "The Mentak Coalition",
+    "expansion": "base"
+  },
+  {
+    "id": "naalu",
+    "name": "The Naalu Collective",
+    "expansion": "base"
+  },
+  {
+    "id": "nekro",
+    "name": "The Nekro Virus",
+    "expansion": "base"
+  },
+  {
+    "id": "sardakk",
+    "name": "Sardakk N'orr",
+    "expansion": "base"
+  },
+  {
+    "id": "jol-nar",
+    "name": "The Universities of Jol-Nar",
+    "expansion": "base"
+  },
+  {
+    "id": "winnu",
+    "name": "The Winnu",
+    "expansion": "base"
+  },
+  {
+    "id": "xxcha",
+    "name": "The Xxcha Kingdom",
+    "expansion": "base"
+  },
+  {
+    "id": "yin",
+    "name": "The Yin Brotherhood",
+    "expansion": "base"
+  },
+  {
+    "id": "yssaril",
+    "name": "The Yssaril Tribes",
+    "expansion": "base"
+  },
+  {
+    "id": "argent",
+    "name": "The Argent Flight",
+    "expansion": "pok"
+  },
+  {
+    "id" : "cabal",
+    "name": "The Vuil'Raith Cabal",
+    "expansion": "pok"
+  },
+  {
+    "id": "empyrean",
+    "name": "The Empyrean",
+    "expansion": "pok"
+  },
+  {
+    "id": "mahact",
+    "name": "The Mahact Gene-Sorcerers",
+    "expansion": "pok"
+  },
+  {
+    "id": "naaz-rokha",
+    "name": "The Naaz-Rokha Alliance",
+    "expansion": "pok"
+  },
+  {
+    "id": "nomad",
+    "name": "The Nomad",
+    "expansion": "pok"
+  },
+  {
+    "id": "titans",
+    "name": "The Titans of Ul",
+    "expansion": "pok"
+  }
+]
