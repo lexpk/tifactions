@@ -11,19 +11,37 @@
     <h1>TI Faction Selector</h1>
 
     <div class="card">
-      <h3>Join a Game</h3>
-
+      <h3 style="margin-top: 0;">Join Game</h3>
       <div class="form-group">
-        <label for="gameId">Game ID:</label>
-        <input type="text" id="gameId" placeholder="e.g., ae9d8da4">
+        <label for="joinGameId">Game ID:</label>
+        <input type="text" id="joinGameId" placeholder="e.g., weekend-game">
       </div>
-
-      <div class="form-group">
-        <label for="playerName">Your Name:</label>
-        <input type="text" id="playerName" placeholder="e.g., Alice">
-      </div>
-
       <button onclick="joinGame()">Join Game</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top: 0;">Create Game</h3>
+
+      <div class="form-group">
+        <label for="createGameId">Game ID:</label>
+        <input type="text" id="createGameId" placeholder="e.g., weekend-game (optional)">
+        <small style="color: var(--text-dim);">Leave empty for auto-generated ID</small>
+      </div>
+
+      <div class="form-group">
+        <label for="factionsPerPlayer">Factions per Player:</label>
+        <select id="factionsPerPlayer">
+          <option value="3">3 factions</option>
+          <option value="4" selected>4 factions</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="playerNames">Player Names (one per line):</label>
+        <textarea id="playerNames" rows="6" placeholder="Alice&#10;Bob&#10;Charlie&#10;Diana"></textarea>
+      </div>
+
+      <button onclick="createGame()">Create Game</button>
     </div>
 
     <div class="card text-center">
@@ -35,16 +53,10 @@
   <script src="./js/app.js"></script>
   <script>
     async function joinGame() {
-      const gameId = document.getElementById('gameId').value.trim();
-      const playerName = document.getElementById('playerName').value.trim();
+      const gameId = document.getElementById('joinGameId').value.trim();
 
       if (!gameId) {
         showError('Please enter a Game ID');
-        return;
-      }
-
-      if (!playerName) {
-        showError('Please enter your name');
         return;
       }
 
@@ -56,24 +68,71 @@
           return;
         }
 
-        const player = status.players.find(p => p.name === playerName);
-        if (!player) {
-          showError(`Player "${playerName}" not found in this game`);
-          return;
-        }
-
-        window.location.href = `./player.html?game=${encodeURIComponent(gameId)}&player=${encodeURIComponent(playerName)}`;
+        window.location.href = `./lobby.html?game=${encodeURIComponent(gameId)}`;
       } catch (error) {
         showError('Failed to join game: ' + error.message);
       }
     }
 
-    // Allow Enter key to submit
+    async function createGame() {
+      const customGameId = document.getElementById('createGameId').value.trim();
+      const factionsPerPlayer = parseInt(document.getElementById('factionsPerPlayer').value);
+      const playerNamesText = document.getElementById('playerNames').value.trim();
+
+      if (!playerNamesText) {
+        showError('Please enter at least 2 player names');
+        return;
+      }
+
+      const playerNames = playerNamesText
+        .split('\n')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      if (playerNames.length < 2) {
+        showError('Please enter at least 2 player names');
+        return;
+      }
+
+      if (playerNames.length > 6) {
+        showError('Maximum 6 players supported');
+        return;
+      }
+
+      const uniqueNames = new Set(playerNames);
+      if (uniqueNames.size !== playerNames.length) {
+        showError('Player names must be unique');
+        return;
+      }
+
+      if (customGameId && !/^[a-zA-Z0-9-_]+$/.test(customGameId)) {
+        showError('Game ID can only contain letters, numbers, hyphens, and underscores');
+        return;
+      }
+
+      try {
+        const result = await API.createGame(playerNames, factionsPerPlayer, customGameId);
+
+        if (result.error) {
+          showError(result.error);
+          return;
+        }
+
+        if (!result.gameId) {
+          showError('Server returned invalid response. Please try again.');
+          return;
+        }
+
+        window.location.href = `./lobby.html?game=${encodeURIComponent(result.gameId)}`;
+      } catch (error) {
+        showError('Failed to create game: ' + error.message);
+      }
+    }
+
+    // Allow Enter key to submit join form
     document.addEventListener('DOMContentLoaded', () => {
-      ['gameId', 'playerName'].forEach(id => {
-        document.getElementById(id).addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') joinGame();
-        });
+      document.getElementById('joinGameId').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') joinGame();
       });
     });
   </script>

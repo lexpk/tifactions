@@ -12,7 +12,7 @@
 
     <!-- Password Set/Login -->
     <div id="authSection" class="card">
-      <h3 id="authTitle">Loading...</h3>
+      <h3 style="margin-top: 0;" id="authTitle">Loading...</h3>
       <div class="form-group">
         <label for="password">Password:</label>
         <input type="password" id="password" placeholder="Enter password" autocomplete="off">
@@ -24,7 +24,7 @@
     <!-- Faction Selection -->
     <div id="selectionSection" class="hidden">
       <div class="card">
-        <h3>Your Faction Options</h3>
+        <h3 style="margin-top: 0;">Your Faction Options</h3>
         <p id="selectionInstructions">Select one faction from your options below:</p>
 
         <div id="factionsGrid" class="faction-grid"></div>
@@ -35,7 +35,7 @@
       </div>
 
       <div id="commitmentCard" class="card">
-        <h3>Your Assignment Commitment</h3>
+        <h3 style="margin-top: 0;">Your Assignment Commitment</h3>
         <p style="font-size: 0.9rem; color: var(--text-dim);">
           This hash proves your factions were assigned before you saw them:
         </p>
@@ -45,7 +45,7 @@
 
     <!-- Waiting for Others -->
     <div id="waitingSection" class="card hidden">
-      <h3>Waiting for Others...</h3>
+      <h3 style="margin-top: 0;">Waiting for Others...</h3>
       <p>You've selected your faction. Waiting for other players to make their selections.</p>
       <div id="waitingStatus"></div>
       <button onclick="checkStatus()" class="secondary mt-2">Refresh Status</button>
@@ -54,14 +54,14 @@
     <!-- Reveal -->
     <div id="revealSection" class="hidden">
       <div class="card">
-        <h3>🎉 All Selections Complete!</h3>
+        <h3 style="margin-top: 0;">🎉 All Selections Complete!</h3>
         <p>Everyone has chosen their faction. Here are the results:</p>
       </div>
 
       <div id="revealContent"></div>
 
       <div class="card">
-        <h3>Verification</h3>
+        <h3 style="margin-top: 0;">Verification</h3>
         <p>All commitments have been verified ✓</p>
         <p style="font-size: 0.9rem; color: var(--text-dim);">
           The cryptographic hashes confirm that no one changed their selection after seeing others' choices.

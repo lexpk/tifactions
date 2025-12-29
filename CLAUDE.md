@@ -28,19 +28,17 @@ tifactions/
 │   ├── db.js                   # Local database (lowdb)
 │   └── dynamodb.js             # AWS DynamoDB database layer
 ├── public/                      # Static files served to clients
-│   ├── index.html              # Landing page with project overview
-│   ├── admin.html              # Game creation interface
+│   ├── index.html              # Landing page (Join + Create game)
+│   ├── lobby.html              # Game lobby with player links
 │   ├── player.html             # Faction selection interface
-│   ├── status.html             # Public game status and commitments
 │   ├── docs.html               # Documentation and how-to guide
 │   ├── css/
 │   │   └── style.css           # Shared styles
 │   └── js/
 │       ├── config.js           # API configuration (set during deploy)
 │       ├── app.js              # Shared utilities and API client
-│       ├── admin.js            # Admin page logic
+│       ├── lobby.js            # Lobby page logic
 │       ├── player.js           # Player page logic
-│       ├── status.js           # Status page logic
 │       └── verification.js     # Client-side hash verification
 ├── .github/workflows/
 │   └── deploy.yml              # Combined AWS + GitHub Pages auto-deploy
@@ -130,36 +128,31 @@ A commitment scheme allows players to "commit" to a choice without revealing it.
 **Pages:**
 
 1. **Landing Page** (`/` or `/index.html`)
-   - Join game form (enter Game ID and player name)
+   - Join game form (enter Game ID only)
+   - Create game form (Game ID, player names, factions per player)
    - Link to documentation
 
-2. **Documentation Page** (`/docs.html`)
-   - Explanation of the commitment scheme
-   - How to use the system (step-by-step guide)
-   - Security guarantees and limitations
-   - FAQ and troubleshooting
-   - Technical details for verification
+2. **Game Lobby** (`/lobby.html?game=XXX`)
+   - Shows Game ID with copy button
+   - Lists all players as clickable links
+   - Shows selection status (No Password / Waiting / Selected)
+   - Auto-refreshes every 10 seconds
+   - Displays reveal when all players have selected
 
-3. **Admin Page** (`/admin.html`)
-   - Create new game
-   - Set number of factions per player (3 or 4)
-   - Enter player names
-   - Generate shareable player links (no tokens needed)
-
-4. **Player Page** (`/player.html?game=XXX&player=YYY`)
+3. **Player Page** (`/player.html?game=XXX&player=YYY`)
    - First visit: Set a password (stored as bcrypt hash)
    - Subsequent visits: Enter password to authenticate
    - View assigned factions (after authentication)
    - Select one faction
    - See "waiting for others" status
    - View revealed results with verification
-   - Link to verify commitments independently
 
-5. **Status Page** (`/status.html?game=XXX`)
-   - Shows public commitments (hashes)
-   - Shows which players have selected
-   - Displays reveal when ready
-   - Public audit log
+4. **Documentation Page** (`/docs.html`)
+   - Explanation of the commitment scheme
+   - How to use the system (step-by-step guide)
+   - Security guarantees and limitations
+   - FAQ and troubleshooting
+   - Technical details for verification
 
 ### Technology Stack
 

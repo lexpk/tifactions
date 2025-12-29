@@ -406,6 +406,24 @@ button.danger:hover {
   align-items: center;
 }
 
+.player-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.player-link:hover {
+  background: var(--bg-light);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.player-link::after {
+  display: none;
+}
+
 .player-name {
   font-weight: 500;
 }

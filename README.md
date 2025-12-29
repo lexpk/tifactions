@@ -34,21 +34,26 @@ Then navigate to `http://localhost:3000`
 ## How to Use
 
 ### 1. Create a Game
-- Go to `/admin.html`
+- Go to the home page and fill in the "Create Game" form
 - Choose 3 or 4 factions per player
 - Enter player names (one per line)
-- Share generated links with players
+- Share the Game ID with all players
 
-### 2. Players Set Passwords
-- **Important:** Set password immediately after receiving link!
-- If someone gets your link first, they can lock you out
+### 2. Join the Lobby
+- Enter the Game ID on the home page
+- Click "Join Game" to see all players
+- Click on your name to go to faction selection
 
-### 3. Select Factions
+### 3. Set Your Password
+- **Important:** Set password immediately!
+- If someone clicks your name first, they can lock you out
+
+### 4. Select Factions
 - View your random faction options
 - Choose one faction
 - **Cannot be changed after confirmation!**
 
-### 4. Reveal
+### 5. Reveal
 - Once everyone selects, all choices are revealed
 - Cryptographic commitments are automatically verified
 - Check browser console for "✓ All cryptographic commitments verified"
@@ -111,10 +116,9 @@ tifactions/
 │   └── dynamodb.js        # AWS DynamoDB layer
 ├── factions.json          # TI faction data
 ├── public/                # Static files (GitHub Pages)
-│   ├── index.html         # Landing page
-│   ├── admin.html         # Game creation
+│   ├── index.html         # Landing page (Join + Create)
+│   ├── lobby.html         # Game lobby with player links
 │   ├── player.html        # Faction selection
-│   ├── status.html        # Public status
 │   ├── docs.html          # Documentation
 │   ├── css/style.css      # Styles
 │   └── js/*.js            # Frontend logic

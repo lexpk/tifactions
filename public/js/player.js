@@ -204,13 +204,12 @@ async function confirmSelection() {
       return;
     }
 
-    showSuccess('Selection confirmed!');
+    showSuccess('Selection confirmed! Returning to lobby...');
 
-    if (result.revealed) {
-      await showReveal();
-    } else {
-      showWaiting();
-    }
+    // Redirect back to lobby after a short delay
+    setTimeout(() => {
+      window.location.href = `./lobby.html?game=${encodeURIComponent(gameState.gameId)}`;
+    }, 1500);
 
   } catch (error) {
     showError('Failed to submit selection: ' + error.message);
@@ -284,14 +283,12 @@ async function showReveal() {
       const isCurrentPlayer = player.name === gameState.playerName;
 
       card.innerHTML = `
-        <h3>${player.name}${isCurrentPlayer ? ' (You)' : ''}</h3>
+        <h3 style="margin-top: 0;">${player.name}${isCurrentPlayer ? ' (You)' : ''}</h3>
         <div class="faction-name" style="color: var(--success); margin: 1rem 0;">
-          ➜ ${player.selectedFaction.name}
+          ${player.selectedFaction.name}
         </div>
         <details>
-          <summary style="cursor: pointer; color: var(--text-dim); margin: 1rem 0;">
-            Show all options (${player.factions.length})
-          </summary>
+          <summary>Show all options (${player.factions.length})</summary>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
             ${player.factions.map(f =>
               `<span style="padding: 0.25rem 0.75rem; background: var(--bg-lighter); border-radius: 12px; font-size: 0.9rem;">
@@ -300,10 +297,8 @@ async function showReveal() {
             ).join('')}
           </div>
         </details>
-        <details style="margin-top: 1rem;">
-          <summary style="cursor: pointer; color: var(--text-dim);">
-            Show cryptographic proof
-          </summary>
+        <details>
+          <summary>Show cryptographic proof</summary>
           <div style="margin-top: 0.5rem;">
             <p style="font-size: 0.85rem; margin-bottom: 0.5rem;">Assignment Commitment:</p>
             <div class="commitment">${player.assignmentCommitment}</div>

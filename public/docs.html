@@ -11,33 +11,40 @@
     <h1>Documentation</h1>
 
     <div class="card">
-      <h2>How to Use</h2>
+      <h2 style="margin-top: 0;">How to Use</h2>
 
-      <h3>1. Create a Game (Admin)</h3>
+      <h3>1. Create a Game</h3>
       <ul>
-        <li>Go to the <a href="./admin.html">Create Game</a> page</li>
+        <li>Go to the <a href="./">Home Page</a></li>
+        <li>Fill in the "Create Game" form</li>
         <li>Choose how many factions each player gets (3 or 4)</li>
         <li>Enter player names (one per line)</li>
-        <li>Click "Create Game"</li>
-        <li>Share the generated links with each player</li>
+        <li>Click "Create Game" to go to the lobby (auto-deletes after 30 days)</li>
+        <li>Share the Game ID with all players</li>
       </ul>
 
-      <h3>2. Set Your Password (Players)</h3>
+      <h3>2. Join the Game Lobby</h3>
       <ul>
-        <li>Click the link you received from the admin</li>
+        <li>Enter the Game ID on the <a href="./">Home Page</a></li>
+        <li>Click "Join Game" to see the lobby with all players</li>
+        <li>Click on your name to go to the faction selection page</li>
+      </ul>
+
+      <h3>3. Set Your Password</h3>
+      <ul>
         <li><strong>Important:</strong> Set your password immediately!</li>
-        <li>If someone gets your link before you set a password, they can lock you out</li>
+        <li>If someone clicks your name before you set a password, they can lock you out</li>
         <li>Choose a password (minimum 4 characters)</li>
       </ul>
 
-      <h3>3. View Your Factions</h3>
+      <h3>4. View Your Factions</h3>
       <ul>
         <li>After setting/entering your password, you'll see your random faction options</li>
         <li>You'll have 3-4 factions to choose from</li>
         <li>Take your time to decide - you can't see what others got</li>
       </ul>
 
-      <h3>4. Make Your Selection</h3>
+      <h3>5. Make Your Selection</h3>
       <ul>
         <li>Click on the faction you want to play</li>
         <li>Click "Confirm Selection"</li>
@@ -45,7 +52,7 @@
         <li>Wait for other players to make their selections</li>
       </ul>
 
-      <h3>5. View Results</h3>
+      <h3>6. View Results</h3>
       <ul>
         <li>Once everyone has selected, all choices are revealed</li>
         <li>You can see everyone's options and what they chose</li>
@@ -54,7 +61,7 @@
     </div>
 
     <div class="card">
-      <h2>How It Works (Technical)</h2>
+      <h2 style="margin-top: 0;">How It Works (Technical)</h2>
 
       <h3>Cryptographic Commitments</h3>
       <p>
@@ -88,7 +95,7 @@
     </div>
 
     <div class="card">
-      <h2>Security Properties</h2>
+      <h2 style="margin-top: 0;">Security Properties</h2>
 
       <h3>What This Guarantees</h3>
       <ul>
@@ -117,7 +124,7 @@
 
 
     <div class="card">
-      <h2>FAQ</h2>
+      <h2 style="margin-top: 0;">FAQ</h2>
 
       <h4>Q: Can the server operator see my options?</h4>
       <p>
@@ -128,7 +135,7 @@
 
       <h4>Q: What if I forget my password?</h4>
       <p>
-        A: There's no password recovery. You'll need to ask the admin to create a new game.
+        A: There's no password recovery. You'll need to create a new game.
         This is by design - there's no way to verify your identity.
       </p>
 
@@ -150,10 +157,7 @@
     </div>
 
     <div class="card text-center">
-      <p>
-        <a href="./"><button>Back to Home</button></a>
-        <a href="./admin.html"><button class="secondary">Create a Game</button></a>
-      </p>
+      <a href="./">Back to Home</a>
     </div>
   </div>
 </body>
