@@ -276,6 +276,8 @@ lexpk.github.io/tifactions    API Gateway + DynamoDB
 
 **Cost protection:** API throttling at 5 req/sec via Usage Plan
 
+**Data retention:** Games auto-delete after 30 days (DynamoDB TTL)
+
 **Delete everything:** `sam delete`
 
 ## Security Considerations

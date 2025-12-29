@@ -152,13 +152,17 @@ app.post('/api/game/create', async (req, res) => {
     // Create game
     const players = assignFactions(playerNames, factionsPerPlayer);
 
+    // Set expiration to 30 days from now (Unix timestamp in seconds)
+    const expiresAt = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
+
     await setGame(gameId, {
       gameId,
       players,
       factionsPerPlayer,
       allSelected: false,
       revealed: false,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      expiresAt
     });
 
     res.json({

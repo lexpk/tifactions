@@ -50,6 +50,9 @@ Resources:
       KeySchema:
         - AttributeName: gameId
           KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
 
   # Lambda Function
   TIFactionsFunction:
