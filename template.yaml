@@ -48,7 +48,8 @@ Resources:
       Handler: lambda.handler
       CodeUri: .
       Description: TI Faction Selector API
-      ReservedConcurrentExecutions: 5  # Max 5 concurrent Lambda invocations
+      # Note: ReservedConcurrentExecutions removed - account has limited capacity
+      # API throttling (5 req/sec) provides cost protection instead
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GamesTable

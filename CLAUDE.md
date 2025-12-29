@@ -311,7 +311,6 @@ sam deploy
 
 **Cost protection (built-in):**
 - API throttling: 5 requests/sec, burst 10 (via Usage Plan)
-- Lambda concurrency: Max 5 concurrent executions
 - Recommended: Set up AWS Budget alert ($1/month)
 
 **Delete everything:**
