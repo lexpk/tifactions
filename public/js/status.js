@@ -24,6 +24,11 @@ async function loadStatus() {
       return;
     }
 
+    if (!status.players || !Array.isArray(status.players)) {
+      showError('Invalid game data received from server');
+      return;
+    }
+
     displayPlayers(status.players, status.allSelected);
     displayCommitments(status.players);
 

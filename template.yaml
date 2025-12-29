@@ -7,17 +7,26 @@ Parameters:
     Type: String
     Default: '*'
     Description: GitHub Pages URL for CORS (e.g., https://username.github.io)
+  JwtSecret:
+    Type: String
+    Default: ''
+    Description: Secret key for JWT signing (auto-generated if empty)
+    NoEcho: true
+
+Conditions:
+  HasJwtSecret: !Not [!Equals [!Ref JwtSecret, '']]
 
 Globals:
   Function:
     Timeout: 30
-    Runtime: nodejs18.x
+    Runtime: nodejs20.x
     MemorySize: 256
     Environment:
       Variables:
         DYNAMODB_TABLE: !Ref GamesTable
         NODE_ENV: production
         ALLOWED_ORIGINS: !Ref GitHubPagesUrl
+        JWT_SECRET: !If [HasJwtSecret, !Ref JwtSecret, !Sub '${AWS::StackId}-jwt-secret-key']
   Api:
     # Throttle to prevent cost explosion
     Auth:

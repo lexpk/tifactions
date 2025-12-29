@@ -44,6 +44,12 @@ async function createGame() {
       return;
     }
 
+    if (!result.gameId) {
+      showError('Server returned invalid response (no game ID). Please try again.');
+      console.error('Invalid create game response:', result);
+      return;
+    }
+
     displayGameLinks(result);
   } catch (error) {
     showError('Failed to create game: ' + error.message);

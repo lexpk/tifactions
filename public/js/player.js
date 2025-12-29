@@ -2,8 +2,25 @@ let gameState = {
   gameId: null,
   playerName: null,
   isAuthenticated: false,
-  selectedFactionId: null
+  selectedFactionId: null,
+  token: null
 };
+
+// Token storage helpers
+function getStoredToken(gameId, playerName) {
+  const key = `tifactions_token_${gameId}_${playerName}`;
+  return sessionStorage.getItem(key);
+}
+
+function storeToken(gameId, playerName, token) {
+  const key = `tifactions_token_${gameId}_${playerName}`;
+  sessionStorage.setItem(key, token);
+}
+
+function clearStoredToken(gameId, playerName) {
+  const key = `tifactions_token_${gameId}_${playerName}`;
+  sessionStorage.removeItem(key);
+}
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', async () => {
@@ -17,7 +34,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   gameState.gameId = params.game;
   gameState.playerName = decodeURIComponent(params.player);
 
-  await checkAuthStatus();
+  // Check for stored token
+  const storedToken = getStoredToken(gameState.gameId, gameState.playerName);
+  if (storedToken) {
+    gameState.token = storedToken;
+    gameState.isAuthenticated = true;
+    await loadPlayerData();
+  } else {
+    await checkAuthStatus();
+  }
 });
 
 async function checkAuthStatus() {
@@ -26,6 +51,11 @@ async function checkAuthStatus() {
 
     if (status.error) {
       showError(status.error);
+      return;
+    }
+
+    if (!status.players || !Array.isArray(status.players)) {
+      showError('Invalid game data received from server');
       return;
     }
 
@@ -70,6 +100,12 @@ async function authenticate() {
       showSuccess('Password set successfully!');
     }
 
+    // Store the JWT token
+    if (result.token) {
+      gameState.token = result.token;
+      storeToken(gameState.gameId, gameState.playerName, result.token);
+    }
+
     gameState.isAuthenticated = true;
     await loadPlayerData();
 
@@ -80,9 +116,17 @@ async function authenticate() {
 
 async function loadPlayerData() {
   try {
-    const data = await API.getOptions(gameState.gameId, gameState.playerName);
+    const data = await API.getOptions(gameState.gameId, gameState.playerName, gameState.token);
 
     if (data.error) {
+      // If token is invalid/expired, clear it and show auth screen
+      if (data.error.includes('token') || data.error.includes('Token') || data.error.includes('authenticated')) {
+        clearStoredToken(gameState.gameId, gameState.playerName);
+        gameState.token = null;
+        gameState.isAuthenticated = false;
+        await checkAuthStatus();
+        return;
+      }
       showError(data.error);
       return;
     }
@@ -151,7 +195,8 @@ async function confirmSelection() {
     const result = await API.selectFaction(
       gameState.gameId,
       gameState.playerName,
-      gameState.selectedFactionId
+      gameState.selectedFactionId,
+      gameState.token
     );
 
     if (result.error) {
@@ -186,6 +231,11 @@ async function checkStatus() {
   try {
     const status = await API.getStatus(gameState.gameId);
 
+    if (status.error || !status.players) {
+      console.error('Failed to check status:', status.error || 'Invalid response');
+      return;
+    }
+
     if (status.revealed) {
       await showReveal();
       return;
@@ -212,6 +262,11 @@ async function showReveal() {
 
     if (reveal.error) {
       showError(reveal.error);
+      return;
+    }
+
+    if (!reveal.players || !Array.isArray(reveal.players)) {
+      showError('Invalid reveal data received from server');
       return;
     }
 

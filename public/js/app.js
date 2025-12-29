@@ -3,6 +3,22 @@
 // Get API base URL from config (empty for local, Lambda URL for production)
 const API_BASE = (window.CONFIG && window.CONFIG.API_BASE) || '';
 
+// Helper to handle API responses
+async function handleResponse(res) {
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error(`Server returned invalid response (status ${res.status})`);
+  }
+
+  if (!res.ok && !data.error) {
+    throw new Error(`Request failed with status ${res.status}`);
+  }
+
+  return data;
+}
+
 const API = {
   async createGame(playerNames, factionsPerPlayer, customGameId = null) {
     const res = await fetch(`${API_BASE}/api/game/create`, {
@@ -11,12 +27,12 @@ const API = {
       credentials: 'include',
       body: JSON.stringify({ playerNames, factionsPerPlayer, customGameId })
     });
-    return await res.json();
+    return await handleResponse(res);
   },
 
   async getStatus(gameId) {
     const res = await fetch(`${API_BASE}/api/game/${gameId}/status`, { credentials: 'include' });
-    return await res.json();
+    return await handleResponse(res);
   },
 
   async authenticate(gameId, playerName, password) {
@@ -26,27 +42,38 @@ const API = {
       credentials: 'include',
       body: JSON.stringify({ password })
     });
-    return await res.json();
+    return await handleResponse(res);
   },
 
-  async getOptions(gameId, playerName) {
-    const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/options`, { credentials: 'include' });
-    return await res.json();
+  async getOptions(gameId, playerName, token) {
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/options`, {
+      headers,
+      credentials: 'include'
+    });
+    return await handleResponse(res);
   },
 
-  async selectFaction(gameId, playerName, factionId) {
+  async selectFaction(gameId, playerName, factionId, token) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/select`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       credentials: 'include',
       body: JSON.stringify({ factionId })
     });
-    return await res.json();
+    return await handleResponse(res);
   },
 
   async getReveal(gameId) {
     const res = await fetch(`${API_BASE}/api/game/${gameId}/reveal`, { credentials: 'include' });
-    return await res.json();
+    return await handleResponse(res);
   }
 };
 
