@@ -1,13 +1,38 @@
 import express from 'express';
 import session from 'express-session';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { readFileSync } from 'fs';
 import { generateSalt, createAssignmentCommitment, createSelectionCommitment } from './lib/crypto.js';
-import { getGame, setGame, hasGame, getGamesByIP, deleteGame } from './lib/db.js';
+
+// Use DynamoDB in Lambda, lowdb locally
+const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+const db = isLambda
+  ? await import('./lib/dynamodb.js')
+  : await import('./lib/db.js');
+const { getGame, setGame, hasGame, getGamesByIP, deleteGame } = db;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// CORS for GitHub Pages
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000'];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Middleware
 app.use(express.json());
@@ -93,7 +118,7 @@ app.post('/api/game/create', async (req, res) => {
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.socket.remoteAddress;
 
   // Check IP game limit (max 2 concurrent games per IP)
-  const existingGames = getGamesByIP(clientIP);
+  const existingGames = await getGamesByIP(clientIP);
   if (existingGames.length >= 2) {
     return res.status(429).json({
       error: 'Maximum 2 games per user. Please select a game to delete.',
@@ -127,7 +152,7 @@ app.post('/api/game/create', async (req, res) => {
     }
 
     // Check if already in use
-    if (hasGame(customGameId)) {
+    if (await hasGame(customGameId)) {
       return res.status(409).json({
         error: `Game ID "${customGameId}" is already in use. Please choose a different ID.`
       });
@@ -168,7 +193,7 @@ app.delete('/api/game/:gameId', async (req, res) => {
   const { gameId } = req.params;
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0] || req.ip || req.socket.remoteAddress;
 
-  const game = getGame(gameId);
+  const game = await getGame(gameId);
 
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
@@ -188,8 +213,8 @@ app.delete('/api/game/:gameId', async (req, res) => {
  * GET /api/game/:gameId/status
  * Get public game status and commitments
  */
-app.get('/api/game/:gameId/status', (req, res) => {
-  const game = getGame(req.params.gameId);
+app.get('/api/game/:gameId/status', async (req, res) => {
+  const game = await getGame(req.params.gameId);
 
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
@@ -217,7 +242,7 @@ app.post('/api/game/:gameId/player/:playerName/auth', async (req, res) => {
   const { gameId, playerName } = req.params;
   const { password } = req.body;
 
-  const game = getGame(gameId);
+  const game = await getGame(gameId);
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
   }
@@ -285,8 +310,8 @@ function requireAuth(req, res, next) {
  * GET /api/game/:gameId/player/:playerName/options
  * Get player's faction options (requires authentication)
  */
-app.get('/api/game/:gameId/player/:playerName/options', requireAuth, (req, res) => {
-  const game = getGame(req.params.gameId);
+app.get('/api/game/:gameId/player/:playerName/options', requireAuth, async (req, res) => {
+  const game = await getGame(req.params.gameId);
 
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
@@ -316,7 +341,7 @@ app.post('/api/game/:gameId/player/:playerName/select', requireAuth, async (req,
   const { gameId, playerName } = req.params;
   const { factionId } = req.body;
 
-  const game = getGame(gameId);
+  const game = await getGame(gameId);
 
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
@@ -373,8 +398,8 @@ app.post('/api/game/:gameId/player/:playerName/select', requireAuth, async (req,
  * GET /api/game/:gameId/reveal
  * Get revealed data (only after all selections made)
  */
-app.get('/api/game/:gameId/reveal', (req, res) => {
-  const game = getGame(req.params.gameId);
+app.get('/api/game/:gameId/reveal', async (req, res) => {
+  const game = await getGame(req.params.gameId);
 
   if (!game) {
     return res.status(404).json({ error: 'Game not found' });
@@ -397,8 +422,12 @@ app.get('/api/game/:gameId/reveal', (req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`TI Faction Selector running on port ${PORT}`);
-  console.log(`Navigate to http://localhost:${PORT} to get started`);
-});
+// Start server (only when not in Lambda)
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  app.listen(PORT, () => {
+    console.log(`TI Faction Selector running on port ${PORT}`);
+    console.log(`Navigate to http://localhost:${PORT} to get started`);
+  });
+}
+
+export { app };

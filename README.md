@@ -22,12 +22,13 @@ npm start
 
 Then navigate to `http://localhost:3000`
 
-### Deploy to Render.com
+### Deploy to AWS + GitHub Pages
 
-1. Push code to GitHub
-2. Connect repository to Render.com
-3. Render auto-detects settings from `render.yaml`
-4. Deploy and share the URL with your group!
+1. Install AWS SAM CLI and configure AWS credentials
+2. Deploy Lambda: `sam build && sam deploy --guided`
+3. Push to GitHub, enable Pages (Settings → Pages → GitHub Actions)
+4. Add secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `API_URL`
+5. Share your `yourusername.github.io/tifactions` URL!
 
 ## How to Use
 
@@ -62,7 +63,6 @@ Then navigate to `http://localhost:3000`
 ### Limitations
 - Server operator could modify code to log plaintext before hashing
 - Weak passwords can be compromised
-- In-memory storage means games lost on server restart
 - Small faction pool makes brute-force easier than random data
 
 ### For Maximum Trust
@@ -89,33 +89,34 @@ commitment = SHA-256(playerName || selectedFaction || randomSalt)
 All data + salts revealed, clients verify: `hash(data + salt) == commitment`
 
 ### Stack
-- **Backend:** Node.js + Express
+- **Backend:** Node.js + Express on AWS Lambda
+- **Database:** DynamoDB (persistent)
 - **Auth:** bcrypt password hashing
 - **Crypto:** SHA-256 commitments
-- **Frontend:** Vanilla HTML/CSS/JS (no build step!)
-- **Storage:** In-memory
+- **Frontend:** Vanilla HTML/CSS/JS on GitHub Pages
+- **CI/CD:** GitHub Actions auto-deploy
 
 ## Project Structure
 
 ```
 tifactions/
 ├── server.js              # Express server
-├── lib/crypto.js          # Cryptographic functions
+├── lambda.js              # AWS Lambda entry point
+├── template.yaml          # AWS SAM template
+├── lib/
+│   ├── crypto.js          # Cryptographic functions
+│   ├── db.js              # Local database (lowdb)
+│   └── dynamodb.js        # AWS DynamoDB layer
 ├── factions.json          # TI faction data
-├── public/
+├── public/                # Static files (GitHub Pages)
 │   ├── index.html         # Landing page
 │   ├── admin.html         # Game creation
 │   ├── player.html        # Faction selection
 │   ├── status.html        # Public status
 │   ├── docs.html          # Documentation
 │   ├── css/style.css      # Styles
-│   └── js/
-│       ├── app.js         # Shared utilities
-│       ├── admin.js       # Admin logic
-│       ├── player.js      # Player logic
-│       ├── status.js      # Status page logic
-│       └── verification.js # Cryptographic verification
-└── render.yaml            # Render.com config
+│   └── js/*.js            # Frontend logic
+└── .github/workflows/     # CI/CD auto-deploy
 ```
 
 ## API Endpoints

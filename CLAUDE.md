@@ -19,10 +19,14 @@ tifactions/
 ├── CLAUDE.md                    # This file - project documentation and design
 ├── package.json                 # Node.js dependencies and scripts
 ├── server.js                    # Express server with API endpoints
+├── lambda.js                    # AWS Lambda entry point
 ├── factions.json                # Twilight Imperium faction data
-├── render.yaml                  # Render.com deployment configuration
+├── template.yaml                # AWS SAM deployment template
+├── samconfig.toml               # AWS SAM configuration
 ├── lib/
-│   └── crypto.js               # Cryptographic commitment functions
+│   ├── crypto.js               # Cryptographic commitment functions
+│   ├── db.js                   # Local database (lowdb)
+│   └── dynamodb.js             # AWS DynamoDB database layer
 ├── public/                      # Static files served to clients
 │   ├── index.html              # Landing page with project overview
 │   ├── admin.html              # Game creation interface
@@ -32,11 +36,15 @@ tifactions/
 │   ├── css/
 │   │   └── style.css           # Shared styles
 │   └── js/
+│       ├── config.js           # API configuration (set during deploy)
 │       ├── app.js              # Shared utilities and API client
 │       ├── admin.js            # Admin page logic
 │       ├── player.js           # Player page logic
 │       ├── status.js           # Status page logic
 │       └── verification.js     # Client-side hash verification
+├── .github/workflows/
+│   ├── deploy.yml              # AWS Lambda auto-deploy
+│   └── pages.yml               # GitHub Pages auto-deploy
 └── README.md                    # Quick start guide
 ```
 
@@ -158,12 +166,32 @@ A commitment scheme allows players to "commit" to a choice without revealing it.
 
 ### Technology Stack
 
-- **Backend**: Node.js 18+ with Express
+- **Backend**: Node.js 18+ with Express (runs on AWS Lambda in production)
+- **Database**: DynamoDB (production) / lowdb JSON file (local development)
 - **Crypto**: Node.js built-in `crypto` module (SHA-256 for commitments)
-- **Password Hashing**: bcrypt for secure password storage
-- **Frontend**: Vanilla HTML/CSS/JavaScript (no build step)
-- **Storage**: In-memory (for session-based games)
+- **Password Hashing**: bcryptjs for secure password storage
+- **Frontend**: Vanilla HTML/CSS/JavaScript hosted on GitHub Pages
 - **Authentication**: Password-based (set on first visit, bcrypt hashed)
+- **CI/CD**: GitHub Actions for auto-deployment
+
+### Database Layer
+
+The app automatically switches databases based on environment:
+
+```javascript
+// server.js
+const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+const db = isLambda
+  ? await import('./lib/dynamodb.js')   // Production (AWS)
+  : await import('./lib/db.js');         // Local development
+```
+
+| Environment | Database | Storage |
+|-------------|----------|---------|
+| `npm start` (local) | lowdb | `data/db.json` file |
+| AWS Lambda | DynamoDB | AWS managed |
+
+Both implement the same interface: `getGame`, `setGame`, `hasGame`, `getGamesByIP`, `deleteGame`
 
 ### Authentication Flow
 
@@ -252,32 +280,83 @@ npm start
 
 Then navigate to `http://localhost:3000` to access the application.
 
-### Deploying to Render.com
+### Deploying to AWS Lambda + DynamoDB
 
-**Option 1: One-Click Deploy (Easiest)**
+**Prerequisites:**
+- AWS CLI configured (`aws configure`)
+- AWS SAM CLI installed (`brew install aws-sam-cli` or [install guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html))
 
-1. Push your code to GitHub
-2. Go to [render.com](https://render.com) and sign up (free)
-3. Click "New +" → "Web Service"
-4. Connect your GitHub repository
-5. Render auto-detects settings from `render.yaml`
-6. Click "Create Web Service"
-7. Wait 2-3 minutes for deployment
-8. Access your app at `https://your-app-name.onrender.com`
+**Deploy:**
 
-**Option 2: Manual Configuration**
+```bash
+# Build the application
+sam build
 
-If not using `render.yaml`:
-- **Build Command:** `npm install`
-- **Start Command:** `npm start`
-- **Environment:** Node
-- **Plan:** Free
+# Deploy (first time - will prompt for settings)
+sam deploy --guided
 
-**Important Notes:**
-- Free tier sleeps after 15 minutes of inactivity
-- First request after sleep takes ~30 seconds to wake up
-- **Create your game 15+ minutes before playing** to avoid mid-game restarts
-- In-memory storage means games are lost on restart/redeploy
+# Subsequent deploys
+sam deploy
+```
+
+**What gets created:**
+- Lambda function (Node.js 18)
+- API Gateway (HTTP API)
+- DynamoDB table (pay-per-request)
+
+**Cost:** Near-free for low usage:
+- Lambda: 1M free requests/month
+- DynamoDB: 25GB storage free, pay-per-request
+- API Gateway: 1M requests free/month
+
+**Cost protection (built-in):**
+- API throttling: 5 requests/sec, burst 10
+- Lambda concurrency: Max 5 concurrent executions
+- Recommended: Set up AWS Budget alert ($1/month)
+
+**Delete everything:**
+```bash
+sam delete
+```
+
+### GitHub Pages + Lambda (Recommended)
+
+For a nicer URL like `yourusername.github.io/tifactions`:
+
+**Architecture:**
+```
+GitHub Pages (Static)  ────▶  AWS Lambda (API)
+yourusername.github.io        API Gateway + DynamoDB
+```
+
+**Setup steps:**
+
+1. Deploy Lambda first and note the API URL:
+```bash
+sam build && sam deploy --guided
+```
+
+2. Push code to GitHub
+
+3. Enable GitHub Pages:
+   - Repo → Settings → Pages → Source: "GitHub Actions"
+
+4. Add GitHub Secrets (Repo → Settings → Secrets → Actions):
+
+| Secret | Value |
+|--------|-------|
+| `AWS_ACCESS_KEY_ID` | Your AWS access key |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key |
+| `API_URL` | Lambda URL (e.g., `https://abc123.execute-api.us-east-1.amazonaws.com`) |
+
+5. (Optional) Restrict CORS to your GitHub Pages URL:
+```bash
+sam deploy --parameter-overrides GitHubPagesUrl=https://yourusername.github.io
+```
+
+**CI/CD:**
+- Push to `main` → Auto-deploys to both GitHub Pages and Lambda
+- Workflows: `.github/workflows/pages.yml` and `.github/workflows/deploy.yml`
 
 ## Security Considerations
 

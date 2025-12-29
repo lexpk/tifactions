@@ -1,45 +1,51 @@
 // Shared utilities and API client
 
+// Get API base URL from config (empty for local, Lambda URL for production)
+const API_BASE = (window.CONFIG && window.CONFIG.API_BASE) || '';
+
 const API = {
   async createGame(playerNames, factionsPerPlayer, customGameId = null) {
-    const res = await fetch('/api/game/create', {
+    const res = await fetch(`${API_BASE}/api/game/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ playerNames, factionsPerPlayer, customGameId })
     });
     return await res.json();
   },
 
   async getStatus(gameId) {
-    const res = await fetch(`/api/game/${gameId}/status`);
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/status`, { credentials: 'include' });
     return await res.json();
   },
 
   async authenticate(gameId, playerName, password) {
-    const res = await fetch(`/api/game/${gameId}/player/${encodeURIComponent(playerName)}/auth`, {
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ password })
     });
     return await res.json();
   },
 
   async getOptions(gameId, playerName) {
-    const res = await fetch(`/api/game/${gameId}/player/${encodeURIComponent(playerName)}/options`);
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/options`, { credentials: 'include' });
     return await res.json();
   },
 
   async selectFaction(gameId, playerName, factionId) {
-    const res = await fetch(`/api/game/${gameId}/player/${encodeURIComponent(playerName)}/select`, {
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/player/${encodeURIComponent(playerName)}/select`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ factionId })
     });
     return await res.json();
   },
 
   async getReveal(gameId) {
-    const res = await fetch(`/api/game/${gameId}/reveal`);
+    const res = await fetch(`${API_BASE}/api/game/${gameId}/reveal`, { credentials: 'include' });
     return await res.json();
   }
 };

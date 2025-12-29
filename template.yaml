@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: TI Faction Selector - Cryptographically secure faction selection for Twilight Imperium
+
+Parameters:
+  GitHubPagesUrl:
+    Type: String
+    Default: '*'
+    Description: GitHub Pages URL for CORS (e.g., https://username.github.io)
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    MemorySize: 256
+    Environment:
+      Variables:
+        DYNAMODB_TABLE: !Ref GamesTable
+        NODE_ENV: production
+        ALLOWED_ORIGINS: !Ref GitHubPagesUrl
+  Api:
+    # Throttle to prevent cost explosion
+    ThrottlingBurstLimit: 10    # Max concurrent requests
+    ThrottlingRateLimit: 5       # Requests per second
+
+Resources:
+  # DynamoDB Table for games
+  GamesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: tifactions-games
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: gameId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: gameId
+          KeyType: HASH
+
+  # Lambda Function
+  TIFactionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.handler
+      CodeUri: .
+      Description: TI Faction Selector API
+      ReservedConcurrentExecutions: 5  # Max 5 concurrent Lambda invocations
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref GamesTable
+      Events:
+        ProxyApi:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+        RootApi:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
