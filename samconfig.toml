@@ -5,10 +5,10 @@ stack_name = "tifactions"
 resolve_s3 = true
 s3_prefix = "tifactions"
 region = "eu-central-1"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
-parameter_overrides = "GitHubPagesUrl=\"https://lexpk/github.io/tofactions/\""
+parameter_overrides = "GitHubPagesUrl=\"https://lexpk.github.io\""
 image_repositories = []
 
 [default.global.parameters]
